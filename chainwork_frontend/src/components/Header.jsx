@@ -12,26 +12,26 @@ export function Header() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
-            <Link to="/" className="text-xl font-bold text-gray-900 dark:text-white">
+            <Link to="/" className="text-2xl font-bold text-gray-900 dark:text-white">
               ChainWork
             </Link>
           </div>
 
           
-          <nav className="hidden md:flex items-center gap-6">
-            <Link to="/" className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400">
+          <nav className="hidden md:flex items-center gap-6 ">
+            <Link to="/" className="duration-200 hover:animate-bounce text-xl font-medium text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400">
               Home
             </Link>
-            <Link to="/services" className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400">
+            <Link to="/services" className="duration-200 hover:animate-bounce text-xl font-medium text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400">
               Services
             </Link>
-            <Link to="/about" className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400">
+            <Link to="/about" className="duration-200 hover:animate-bounce text-xl font-medium text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400">
               About
             </Link>
-            <Link to="/contact" className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400">
+            <Link to="/contact" className="duration-200 hover:animate-bounce text-xl font-medium text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400">
               Contact
             </Link>
-            <Link to="/profile" className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400">
+            <Link to="/profile" className="duration-200 hover:animate-bounce text-xl font-medium text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400">
               Profile
             </Link>
           </nav>
