@@ -13,6 +13,7 @@ import Contact from "./Pages/Contact";
 import GigDetails from "./Pages/GigDetails";  
 import FreelancerProfile from "./Pages/FreelancerProfile"; 
 import { useTheme } from "./context/ThemeContext"; 
+import LandingPage from "./Pages/LandingPage";
 
 function App() {
   const { theme } = useTheme(); 
@@ -28,6 +29,7 @@ function App() {
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/Landing" element={<LandingPage />} />
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/submit-task" element={<SubmitTask />} />
             <Route path="/review-submission/:id" element={<ReviewSubmission />} />
