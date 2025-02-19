@@ -26,11 +26,11 @@ export function Profile() {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8 ">
+    <div className="container mx-auto px-4 py-8 dark:bg-primary dark:text-white ">
       <div className="max-w-4xl mx-auto">
         <div className="grid gap-8 md:grid-cols-3 ">
           <div>
-            <Card className='dark:bg-gray-800 dark:text-white'>
+            <Card className='dark:bg-secondary dark:text-white'>
               <Card.Content>
                 <div className="text-center">
                   <div className="w-32 h-32 mx-auto bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center">
@@ -55,7 +55,7 @@ export function Profile() {
           </div>
 
           <div className="md:col-span-2 ">
-            <Card className='dark:bg-gray-800 dark:text-white'>
+            <Card className='dark:bg-secondary dark:text-white'>
               <Card.Header>
                 <h2 className="text-2xl font-semibold">Active Submissions</h2>
               </Card.Header>
@@ -64,7 +64,7 @@ export function Profile() {
                   {submissions.map((submission) => (
                     <div
                       key={submission.id}
-                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg dark:bg-gray-800 dark:text-white"
+                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg dark:bg-tertiary dark:text-white"
                     >
                       <div>
                         <h3 className="font-medium">{submission.task}</h3>

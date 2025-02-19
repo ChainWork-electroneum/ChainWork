@@ -1,203 +1,138 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Card } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { usePayment } from '../Context/PaymentContext';
-import { ethers } from 'ethers';
+import React, { useState, useMemo } from "react";
+import { Card } from "../components/ui/Card";
+import { Button } from "../components/ui/Button";
+import { usePayment } from "../Context/PaymentContext";
+import { ethers } from "ethers";
 
 export function CreateTask() {
-
   const [submitting, setSubmitting] = useState(false);
-  
-  const { 
-    account, 
-    connectWallet, 
-    createTaskWithPayment
-  } = usePayment();
+  const { account, connectWallet, createTaskWithPayment } = usePayment();
 
-  // Set closest deadling that can be entered as tomorrow
+  // Set closest deadline that can be entered as tomorrow
   const minDate = useMemo(() => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().slice(0,10);
-  }, [])
+    return tomorrow.toISOString().slice(0, 10);
+  }, []);
 
   // Submits form to create a task
-  const handleSubmit = async(e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      // 1. Check wallet connection
+      // Check wallet connection
       if (!account) {
         await connectWallet();
-        // Exit function after conneting wallet
-        return; 
+        return; // Exit function after connecting wallet
       }
 
       setSubmitting(true);
 
-      // 2. Get form values
+      // Get form values
       const description = e.target.elements.description.value;
       const amount = e.target.elements.amount.value;
-      const currency = e.target.elements.currency.value.toLowerCase();
       const deadline = e.target.elements.deadline.value;
 
-      console.log(description,amount,currency,deadline)
+      console.log(description, amount, deadline);
 
-      // Get price of ETN in selected Currency from CoinGecko
-      const response = await fetch(
-        `https://api.coingecko.com/api/v3/simple/price?ids=electroneum&vs_currencies=${currency}`
-      );
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch ETN price');
-      }
+      // Convert ETN to Wei (smallest unit)
+      const weiAmount = ethers.parseEther(amount);
 
-      const priceData = await response.json();
-      const etnPrice = priceData.electroneum[currency];
-
-      console.log("ETN:", {etnPrice})
-      // Convert fiat to ETN
-      const etnAmount = amount / etnPrice;
-      const formattedEtnAmount = Number(etnAmount).toFixed(6);
-
-      const weiAmount = ethers.parseEther(formattedEtnAmount);
-
-      // Show confirmation window with ETN to wei price
+      // Show confirmation window with ETN amount
       const confirmed = window.confirm(
-        `This task will cost ${formattedEtnAmount} ETN (${amount} ${currency.toUpperCase()}). Continue?`
-      )
-      if(confirmed) {
-        // Call to backend to create the task
+        `This task will cost ${amount} ETN. Continue?`
+      );
+      if (confirmed) {
+        // Call backend to create the task
         const taskDetails = {
           description,
           deadline,
-          bounty: weiAmount.toString()
+          bounty: weiAmount.toString(),
         };
 
         const txHash = await createTaskWithPayment(taskDetails, weiAmount);
-        console.log('Transaction hash:', txHash);
+        console.log("Transaction hash:", txHash);
 
-        alert('Task created successfully!');
-
-        e.target.reset;
+        alert("Task created successfully!");
+        e.target.reset();
       }
-
-    } catch(error) {
-      console.error('Error creating task:', error);
-      alert(error.message)
+    } catch (error) {
+      console.error("Error creating task:", error);
+      alert(error.message);
     } finally {
       setSubmitting(false);
     }
-  }
+  };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-2xl mx-auto">
+    <div className="container mx-auto px-4 py-8 dark:bg-primary dark:text-white">
+      <div className="max-w-2xl mx-auto dark:bg-primary dark:text-white">
         <div className="mb-8">
           <h1 className="text-3xl font-bold">Create a Task</h1>
           <div className="mt-4 relative">
-            <div className="h-2 bg-gray-200 rounded">
+            <div className="h-2 dark:bg-secondary bg-gray-500 rounded">
               <div className="h-full w-1/4 bg-blue-600 rounded" />
             </div>
-            <div className="mt-2 text-sm text-gray-600">Step 1 of 4</div>
+            <div className="mt-2 text-sm text-white">Step 1 of 4</div>
           </div>
         </div>
 
         <Card>
           <Card.Content>
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Title*
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Write a clear and descriptive title"
-                />
-              </div> */}
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium dark:text-stone-50 text-gray-700 mb-1">
                   Description*
                 </label>
                 <textarea
-                  name='description'
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[150px]"
+                  name="description"
+                  className="w-full dark:text-white px-4 py-2 border rounded-lg dark:bg-secondary focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[150px]"
                   placeholder="Describe the task in detail..."
                   required
                 />
               </div>
 
-              {/* <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Category*
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div> */}
-
               <div>
-                <h3 className="text-lg font-semibold mb-4">Bounty</h3>
+                <h3 className="text-lg font-semibold mb-4 dark:text-stone-50">Bounty (in ETN)</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Amount*
+                    <label className="block text-sm font-medium dark:text-stone-50 text-gray-700 mb-1">
+                      Amount (ETN)*
                     </label>
                     <input
                       type="number"
-                      name='amount'
+                      name="amount"
                       min={1}
-                      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="$1000"
+                      step="0.000001"
+                      className="w-full dark:text-white dark:bg-secondary px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter amount in ETN"
                       required
                     />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Currency*
-                    </label>
-                    <select 
-                      name="currency" 
-                      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required>
-                      <option value="">Select currency</option>
-                      <option value="USD">USD</option>
-                      <option value="EUR">EUR</option>
-                      <option value="GBP">GBP</option>
-                    </select>
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block dark:text-stone-50 text-sm font-medium text-gray-700 mb-1">
                   Deadline*
                 </label>
-                <input 
+                <input
                   type="date"
                   name="deadline"
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full dark:text-white dark:bg-secondary px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   min={minDate}
                   required
                 />
               </div>
 
               <div className="flex justify-between pt-4">
-                <Button variant="secondary">Cancel</Button>
-                <Button 
-                  type="submit"
-                  // disabled={submitting || loading || (account && !isEtnNetwork)}
-                  >
-                    {!account 
-                      ? 'LinkMetaMask' 
-                      : submitting 
-                        ? 'Create Task...' 
-                        : 'Create Task'
-                    }
+                <Button variant="bg-secondary dark:bg-secondary rounded-xl border border-white dark:border-white">Cancel</Button>
+                <Button type="submit">
+                  {!account
+                    ? "LinkMetaMask"
+                    : submitting
+                    ? "Creating Task..."
+                    : "Create Task"}
                 </Button>
               </div>
             </form>
