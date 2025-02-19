@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { connectWallet, createEscrowPayment } from '../utils/web3Utils';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { connectWallet, createEscrowPayment, setupETNNetwork } from '../utils/web3Utils';
+import { ethers } from 'ethers';
 
 const PaymentContext = createContext();
 
@@ -12,126 +13,197 @@ export const usePayment = () => {
 };
 
 export const PaymentProvider = ({ children }) => {
-    const [account, setAccount] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [isEtnNetwork, setIsEtnNetwork] = useState(null);
+  const [account, setAccount] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [isEtnNetwork, setIsEtnNetwork] = useState(false);
+  const [balance, setBalance] = useState(null);
 
-    useEffect(() => {
-      const checkConnection = async () => {
-        if(window.ethereum) {
-          try {
-            const accounts = await window.ethereum.request({
-              method: 'eth_accounts'
-            });
-            if(accounts.length > 0) {
-              setAccount(accounts[0]);
-              const chainId = await window.ethereum.request({
-                method: 'eth_chainId'
-              });
-              setIsEtnNetwork(chainId === '0xcb2e');
-            }
-          } catch(error) {
-            console.error('Error checking connection:', error);
-          }
-        }
-      }
-  
-      checkConnection();
-    }, [])
-     
-    useEffect(() => {
-      // Ensure connection is to ETN network
-      const checkNetwork = async () => {
-        if(window.ethereum) {
-          const chainId = await window.ethereum.request({ method: 'eth_chainId'});
-          setIsEtnNetwork(chainId === '0xCB3E');
-        }
-      }
+  // Check if MetaMask is installed
+  const checkMetaMask = useCallback(() => {
+    if (!window.ethereum) {
+      throw new Error('MetaMask is not installed. Please install MetaMask to use this feature.');
+    }
+    return true;
+  }, []);
 
-      // Listeners for account/network changes
-      if(window.ethereum) {
-        window.ethereum.on('chainChanged:', checkNetwork);
-        window.ethereum.on('accountsChanged:', handleAccountChange);
-        if(account) checkNetwork();
-      }
+  // Fetch balance for connected account
+  const fetchBalance = useCallback(async () => {
+    if (!account || !window.ethereum) return;
+    
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const balance = await provider.getBalance(account);
+      const formattedBalance = ethers.formatEther(balance);
+      setBalance(parseFloat(formattedBalance).toFixed(4));
+    } catch (err) {
+      console.error('Error fetching balance:', err);
+      setBalance(null);
+    }
+  }, [account]);
 
-      // Clean up listeners for when component unmounts
-      return () => {
-        if(window.ethereum) {
-          window.ethereum.removeListener('chainChanged', checkNetwork);
-          window.ethereum.removeListener('accountChanged', handleAccountChange);
-        }
-      }
-    }, [account]);
-  
-    // Handle when account switch in MetaMask
-    const handleAccountChange = (accounts) => {
-      if (accounts.length > 0) {
-        setAccount(accounts[0]);
-      } else {
-        setAccount(null);
-      }
-    };
-  
-    // Initial wallet connection
-    const handleConnect = async () => {
-      try {
-        setLoading(true);
+  // Check network status
+  const checkNetwork = useCallback(async () => {
+    try {
+      if (!checkMetaMask()) return;
+      
+      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+      const isEtn = chainId.toLowerCase() === '0xcb2e';
+      setIsEtnNetwork(isEtn);
+      return isEtn;
+    } catch (err) {
+      console.error('Error checking network:', err);
+      setError('Failed to check network status');
+      return false;
+    }
+  }, [checkMetaMask]);
 
-        if(!window.ethereum) {
-          throw new Error("MetaMask not installed!")
-        }
+  // Handle wallet connection
+  const handleConnect = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        const address = await connectWallet();
+      checkMetaMask();
+      
+      // Ensure connection to ETN network
+      await setupETNNetwork();
+      
+      const address = await connectWallet();
+      setAccount(address);
+      
+      await checkNetwork();
+      await fetchBalance();
 
-        setAccount(address);
-        setError(null);
+      // Store wallet connection state in local storage
+      localStorage.setItem('walletConnected', 'true');
 
-        return address;
-      } catch (err) {
-        setError(err.message);
-        console.error(err)
-      } finally {
-        setLoading(false);
-      }
-    };
-  
-    const createTaskWithPayment = async (taskDetails, bountyAmount) => {
-      try {
-        setLoading(true);
-        setError(null);
-  
-        if (!account) {
-          throw new Error('Please connect your wallet first');
-        }
-  
-        // Create escrow payment
-        const txHash = await createEscrowPayment(account, taskDetails, bountyAmount);
-  
-        return txHash;
-      } catch (err) {
-        setError(err.message);
-        throw err;
-      } finally {
-        setLoading(false);
-      }
-    };
-  
-    const value = {
-      account,
-      setAccount,
-      loading,
-      error,
-      isEtnNetwork,
-      setIsEtnNetwork,
-      connectWallet: handleConnect,
-      createTaskWithPayment
-    };
-  
-    return (
-      <PaymentContext.Provider value={value}>
-        {children}
-      </PaymentContext.Provider>
-    );
+      return address;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // Disconnect wallet
+  const disconnectWallet = async () => {
+    try {
+      setLoading(true);
+      
+      // Clear all wallet-related state
+      setAccount(null);
+      setBalance(null);
+      setIsEtnNetwork(false);
+      setError(null);
+      
+      // Remove wallet connection status from local storage
+      localStorage.removeItem('walletConnected');
+      
+      // Remove event listeners if needed
+      if (window.ethereum && window.ethereum.removeAllListeners) {
+        window.ethereum.removeAllListeners();
+      }
+      
+    } catch (err) {
+      setError('Failed to disconnect wallet');
+      console.error('Disconnect error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Create task with payment
+  const createTaskWithPayment = async (taskDetails, bountyAmount) => {
+    try {
+      if (!account) {
+        throw new Error('Please connect your wallet first');
+      }
+
+      if (!isEtnNetwork) {
+        throw new Error('Please switch to the Electroneum network');
+      }
+
+      const txHash = await createEscrowPayment(account, taskDetails, bountyAmount);
+      await fetchBalance(); // Update balance after transaction
+      return txHash;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  // Effect to check network and balance when account changes
+  useEffect(() => {
+    if (account) {
+      checkNetwork();
+      fetchBalance();
+    } else {
+      setBalance(null);
+    }
+  }, [account, checkNetwork, fetchBalance]);
+
+  // Auto-connect wallet if previously connected
+  useEffect(() => {
+    const autoConnect = async () => {
+      if (localStorage.getItem('walletConnected') === 'true') {
+        try {
+          await handleConnect();
+        } catch (err) {
+          console.error('Auto-connect failed:', err);
+        }
+      }
+    };
+    autoConnect();
+  }, []);
+
+  // Listen for network and account changes
+  useEffect(() => {
+    if (!window.ethereum) return;
+
+    const handleChainChanged = async () => {
+      await checkNetwork();
+      await fetchBalance();
+      window.location.reload();
+    };
+
+    const handleAccountsChanged = (accounts) => {
+      if (accounts.length === 0) {
+        disconnectWallet();
+      } else if (accounts[0] !== account) {
+        setAccount(accounts[0]);
+      }
+    };
+
+    window.ethereum.on('chainChanged', handleChainChanged);
+    window.ethereum.on('accountsChanged', handleAccountsChanged);
+
+    return () => {
+      window.ethereum.removeListener('chainChanged', handleChainChanged);
+      window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+    };
+  }, [account, checkNetwork, fetchBalance]);
+
+  // Context values
+  const value = {
+    account,
+    loading,
+    error,
+    isEtnNetwork,
+    balance,
+    connectWallet: handleConnect,
+    disconnectWallet,  
+    createTaskWithPayment,
+    checkNetwork,
+    fetchBalance,
+  };
+
+  return (
+    <PaymentContext.Provider value={value}>
+      {children}
+    </PaymentContext.Provider>
+  );
+};
+
+export default PaymentProvider;
