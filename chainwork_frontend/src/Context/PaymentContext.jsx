@@ -48,7 +48,7 @@ export const PaymentProvider = ({ children }) => {
       if (!checkMetaMask()) return;
       
       const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-      const isEtn = chainId.toLowerCase() === '0xcb2e';
+      const isEtn = Number(chainId) === 5201420;
       setIsEtnNetwork(isEtn);
       return isEtn;
     } catch (err) {

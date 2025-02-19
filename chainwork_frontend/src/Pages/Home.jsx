@@ -3,9 +3,11 @@ import { Card } from "../components/UI/Card";
 import { Button } from "../components/UI/Button"; 
 import { useNavigate } from "react-router-dom";
 import { usePayment } from "../Context/PaymentContext";
+import { useTheme } from "../Context/ThemeContext";
 
 export function Home() {
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const { 
     account, 
     loading, 
@@ -84,13 +86,12 @@ export function Home() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-12">
+    <div className="container mx-auto px-4 py-12 transition-colors dark:bg-primary dark:text-white">
       <div className="max-w-4xl mx-auto text-center">
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-6">
-          Welcome to <span className="text-blue-600 dark:text-blue-400">ChainWork</span>
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-6 transition-colors">
+          Welcome to <span className="text-blue-600 dark:text-blue-400 transition-colors">ChainWork</span>
         </h1>
         
-       
         <div className="mb-8">
           <WalletButton />
           {error && (
@@ -100,16 +101,16 @@ export function Home() {
           )}
         </div>
 
-        <p className="text-lg text-gray-700 dark:text-gray-300 mb-8">
+        <p className="text-lg text-gray-700 dark:text-gray-300 mb-8 transition-colors">
           Connect with skilled professionals or find exciting freelance tasks.
         </p>
 
         <div className="grid gap-6 md:grid-cols-2">
-          <Card className="p-6 bg-white dark:bg-gray-800 shadow-md rounded-lg">
-            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-3">
+          <Card className="p-6 bg-white dark:bg-secondary shadow-md rounded-lg transition-colors">
+            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-3 transition-colors">
               Create a Task
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
+            <p className="text-gray-600 dark:text-gray-300 mb-4 transition-colors">
               Post a new task and find talented people to help you.
             </p>
             <Button 
@@ -121,11 +122,11 @@ export function Home() {
             </Button>
           </Card>
 
-          <Card className="p-6 bg-white dark:bg-gray-800 shadow-md rounded-lg">
-            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-3">
+          <Card className="p-6 bg-white dark:bg-secondary shadow-md rounded-lg transition-colors">
+            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-3 transition-colors">
               Browse Tasks
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
+            <p className="text-gray-600 dark:text-gray-300 mb-4 transition-colors">
               Find tasks that match your skills and start earning.
             </p>
             <Button 

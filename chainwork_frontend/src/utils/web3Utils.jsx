@@ -2,7 +2,8 @@ import { ethers } from 'ethers';
 
 export const setupETNNetwork = async () => {
   try {
-    const ETN_CHAIN_ID = '0xcb2e';
+    const ETN_CHAIN_ID = 5201420;
+
     
     // First check if already on ETN network
     const currentChainId = await window.ethereum.request({ 
@@ -12,7 +13,7 @@ export const setupETNNetwork = async () => {
     console.log('Current chain ID:', currentChainId);
     console.log('Target ETN chain ID:', ETN_CHAIN_ID);
 
-    if (currentChainId.toLowerCase() === ETN_CHAIN_ID.toLowerCase()) {
+    if (Number(currentChainId) === ETN_CHAIN_ID) {
       console.log('Already on ETN network');
       return;
     }
@@ -32,14 +33,14 @@ export const setupETNNetwork = async () => {
 
         const addNetworkParams = {
           chainId: ETN_CHAIN_ID,
-          chainName: 'Electroneum Smart Chain Mainnet',
+          chainName: 'Electroneum Smart Chain Testnet',
           nativeCurrency: {
-            name: 'Electroneum',
+            name: 'Electroneum Testnet',
             symbol: 'ETN',
             decimals: 18
           },
-          rpcUrls: ['https://rpc.electroneum.com'],
-          blockExplorerUrls: ['https://blockexplorer.electroneum.com']
+          rpcUrls: ['https://rpc.ankr.com/electroneum_testnet/7d80ddd88593505c61551e699663d231a2f3c2ddbb5a872125c84f1c70e527ba'],
+          blockExplorerUrls: ['https://blockexplorer.thesecurityteam.rocks/']
         };
 
         console.log('Adding network with params:', addNetworkParams);
